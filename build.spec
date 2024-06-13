@@ -54,7 +54,7 @@ elif platform.system() == "Windows":
     a = Analysis(
         ['app.py'],
         pathex=[],
-        binaries=[('ffmpeg/ffmpeg', 'ffmpeg')],
+        binaries=[('ffmpeg/ffmpeg.exe', 'ffmpeg')],
         datas=[
             ('src/logo.png', 'src'),
             ('src/file.png', 'src'),
