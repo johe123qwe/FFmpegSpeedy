@@ -46,6 +46,7 @@ class FfmpegGui(QWidget):
 
         # Output file selection
         self.output_label = QLabel('导出文件:', self)
+        self.output_label.setFixedHeight(28)
         layout.addWidget(self.output_label)
 
         self.output_path = QLineEdit(self)
