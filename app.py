@@ -2,12 +2,12 @@ import sys
 import ffmpeg
 import platform
 import os
-from PySide6.QtWidgets import QApplication,  QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QMessageBox, QMenuBar
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QMessageBox
 from PySide6.QtGui import QIcon, QAction
 
-
 root_path = os.path.join(os.path.dirname(__file__))
-class FfmpegGui(QWidget):
+
+class FfmpegGui(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -17,7 +17,10 @@ class FfmpegGui(QWidget):
         self.setGeometry(100, 100, 400, 200)
         self.setWindowIcon(QIcon(os.path.join(root_path, 'src', 'logo.png')))  # 设置窗口图标
 
-        layout = QVBoxLayout()
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout(central_widget)
 
         # Input file selection
         self.input_label = QLabel('导入文件:', self)
@@ -46,7 +49,6 @@ class FfmpegGui(QWidget):
 
         # Output file selection
         self.output_label = QLabel('导出文件:', self)
-        self.output_label.setFixedHeight(28)
         layout.addWidget(self.output_label)
 
         self.output_path = QLineEdit(self)
@@ -72,16 +74,13 @@ class FfmpegGui(QWidget):
         self.process_button.clicked.connect(self.process_audio)
         layout.addWidget(self.process_button)
 
-        self.setLayout(layout)
-
         # Create menu bar
-        menubar = QMenuBar(self)
+        menubar = self.menuBar()
         help_menu = menubar.addMenu('帮助')
 
         about_action = QAction('关于', self)
         about_action.triggered.connect(self.show_about_dialog)
         help_menu.addAction(about_action)
-
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -138,7 +137,7 @@ class FfmpegGui(QWidget):
                     ffmpeg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg', 'ffmpeg.exe')
                 elif platform.system() == 'Darwin':
                     ffmpeg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg', 'ffmpeg')
-            
+
             ffmpeg.input(input_file).output(output_file, **{
                 'filter:a': f'atempo={speed}',
                 'c:a': codec
