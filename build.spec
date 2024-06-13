@@ -54,12 +54,14 @@ elif platform.system() == "Windows":
     a = Analysis(
         ['app.py'],
         pathex=[],
-        binaries=[],
+        binaries=[('ffmpeg/ffmpeg', 'ffmpeg.exe')],
         datas=[
-            ('./src', 'src/'),
+            ('src/logo.png', 'src'),
+            ('src/file.png', 'src'),
+            ('src/conversion.png', 'src'),
             ],
         hiddenimports=[],
-        hookspath=['hook'],
+        hookspath=[],
         hooksconfig={},
         runtime_hooks=[],
         excludes=[],
@@ -86,6 +88,7 @@ elif platform.system() == "Windows":
         target_arch=None,
         codesign_identity=None,
         entitlements_file=None,
+        runtime_tmpdir=None,
         icon=['./src/logo.png'],
     )
     coll = COLLECT(

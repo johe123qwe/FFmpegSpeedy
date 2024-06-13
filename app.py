@@ -1,5 +1,6 @@
 import sys
 import ffmpeg
+import platform
 import os
 from PySide6.QtWidgets import QApplication,  QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QMessageBox, QMenuBar
 from PySide6.QtGui import QIcon, QAction
@@ -132,7 +133,10 @@ class FfmpegGui(QWidget):
                 ffmpeg_path = os.path.join(sys._MEIPASS, 'ffmpeg', 'ffmpeg')
             else:
                 # The application is not frozen
-                ffmpeg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg', 'ffmpeg')
+                if platform.system() == 'Windows':
+                    ffmpeg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg', 'ffmpeg.exe')
+                elif platform.system() == 'Darwin':
+                    ffmpeg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ffmpeg', 'ffmpeg')
             
             ffmpeg.input(input_file).output(output_file, **{
                 'filter:a': f'atempo={speed}',
