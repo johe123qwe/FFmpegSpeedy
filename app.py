@@ -2,7 +2,8 @@ import sys
 import ffmpeg
 import platform
 import os
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QMessageBox, QSlider, QHBoxLayout
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QAction
 
 root_path = os.path.join(os.path.dirname(__file__))
@@ -14,7 +15,7 @@ class FfmpegGui(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('FFmpeg 转换音频速度v1.1')
-        self.setGeometry(100, 100, 400, 200)
+        self.setGeometry(100, 100, 400, 250)
         self.setWindowIcon(QIcon(os.path.join(root_path, 'src', 'logo.png')))  # 设置窗口图标
 
         central_widget = QWidget(self)
@@ -42,10 +43,21 @@ class FfmpegGui(QMainWindow):
         self.speed_label = QLabel('音频速度 (0.5 - 2.0):', self)
         layout.addWidget(self.speed_label)
 
-        self.speed_input = QLineEdit(self)
-        self.speed_input.setFixedHeight(28)
-        self.speed_input.setText("0.97")  # Set default speed to 0.97
-        layout.addWidget(self.speed_input)
+        self.speed_layout = QHBoxLayout()
+        self.speed_slider = QSlider(Qt.Horizontal)
+        self.speed_slider.setMinimum(50)
+        self.speed_slider.setMaximum(200)
+        self.speed_slider.setValue(97)  # Set default value to 0.97
+        self.speed_slider.setTickPosition(QSlider.TicksBelow)
+        self.speed_slider.setTickInterval(10)
+        self.speed_slider.valueChanged.connect(self.update_speed_label)
+
+        self.speed_value_label = QLabel('0.97', self)
+
+        self.speed_layout.addWidget(self.speed_slider)
+        self.speed_layout.addWidget(self.speed_value_label)
+
+        layout.addLayout(self.speed_layout)
 
         # Output file selection
         self.output_label = QLabel('导出文件:', self)
@@ -66,6 +78,7 @@ class FfmpegGui(QMainWindow):
 
         self.codec_combo = QComboBox(self)
         self.codec_combo.addItems(['pcm_s16le', 'aac', 'mp3'])
+        self.codec_combo.currentIndexChanged.connect(self.update_output_extension)
         layout.addWidget(self.codec_combo)
 
         # Process button
@@ -114,27 +127,43 @@ class FfmpegGui(QMainWindow):
     def set_output_path(self):
         input_file = self.input_path.text()
         if input_file:
-            base, ext = os.path.splitext(input_file)
-            output_file = f"{base}-拉慢{ext}"
+            base, _ = os.path.splitext(input_file)
+            codec = self.codec_combo.currentText()
+            ext_map = {
+                'pcm_s16le': 'wav',
+                'aac': 'aac',
+                'mp3': 'mp3'
+            }
+            ext = ext_map.get(codec, 'wav')
+            speed_value = self.speed_slider.value() / 100
+            if speed_value < 1.0:
+                output_file = f"{base}-拉慢.{ext}"
+            else:
+                output_file = f"{base}-加速.{ext}"
             self.output_path.setText(output_file)
+
+    def update_output_extension(self):
+        self.set_output_path()
+
+    def update_speed_label(self):
+        speed_value = self.speed_slider.value() / 100
+        self.speed_value_label.setText(f"{speed_value:.2f}")
+        self.set_output_path()
 
     def process_audio(self):
         input_file = self.input_path.text()
         output_file = self.output_path.text()
-        speed = self.speed_input.text()
+        speed = self.speed_slider.value() / 100
         codec = self.codec_combo.currentText()
 
-        if not input_file or not output_file or not speed:
+        if not input_file or not output_file:
             QMessageBox.warning(self, "Input Error", "Please fill in all fields.")
             return
 
-        try:
-            speed = float(speed)
-            if speed < 0.5 or speed > 2.0:
-                raise ValueError("Speed must be between 0.5 and 2.0")
-        except ValueError as e:
-            QMessageBox.warning(self, "Speed Error", f"Invalid speed value: {e}")
-            return
+        if os.path.exists(output_file):
+            reply = QMessageBox.question(self, "文件已存在", f"{output_file} 文件已存在。是否覆盖？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
 
         try:
             if getattr(sys, 'frozen', False):
@@ -150,13 +179,13 @@ class FfmpegGui(QMainWindow):
             ffmpeg.input(input_file).output(output_file, **{
                 'filter:a': f'atempo={speed}',
                 'c:a': codec
-            }).run(cmd=ffmpeg_path)
+            }).overwrite_output().run(cmd=ffmpeg_path)
             QMessageBox.information(self, "成功", "已经转换")
         except Exception as e:
             QMessageBox.critical(self, "Processing Error", f"Error processing audio: {e}")
 
     def show_about_dialog(self):
-        QMessageBox.about(self, "关于", "v1.0 这个程序是用来转换音频速度的工具。")
+        QMessageBox.about(self, "关于", "v1.1 这个程序是用来转换音频速度的工具。")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
