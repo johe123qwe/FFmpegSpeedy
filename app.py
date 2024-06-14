@@ -13,7 +13,7 @@ class FfmpegGui(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('FFmpeg 转换音频速度')
+        self.setWindowTitle('FFmpeg 转换音频速度v1.1')
         self.setGeometry(100, 100, 400, 200)
         self.setWindowIcon(QIcon(os.path.join(root_path, 'src', 'logo.png')))  # 设置窗口图标
 
