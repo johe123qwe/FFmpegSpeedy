@@ -90,11 +90,13 @@ class FfmpegGui(QMainWindow):
         urls = event.mimeData().urls()
         if urls and urls[0].isLocalFile():
             self.input_path.setText(urls[0].toLocalFile())
+            self.set_output_path()
 
     def browse_input_file(self):
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Audio Files (*.mp3 *.wav *.aac *.flac)')
         if file_name:
             self.input_path.setText(file_name)
+            self.set_output_path()
 
     def browse_output_file(self):
         codec = self.codec_combo.currentText()
@@ -108,6 +110,13 @@ class FfmpegGui(QMainWindow):
         file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', f'Audio Files (*.{ext})', options=options)
         if file_name:
             self.output_path.setText(file_name)
+
+    def set_output_path(self):
+        input_file = self.input_path.text()
+        if input_file:
+            base, ext = os.path.splitext(input_file)
+            output_file = f"{base}-拉慢{ext}"
+            self.output_path.setText(output_file)
 
     def process_audio(self):
         input_file = self.input_path.text()
